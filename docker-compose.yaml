@@ -1,5 +1,22 @@
 # https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
 services:
+  reverse-proxy:
+    image: traefik:v3.1.2
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--log.level=DEBUG"
+      - "--entrypoints.web.address=:80"
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+
   langfuse-server:
     image: langfuse/langfuse:2
     depends_on:
@@ -12,7 +29,8 @@ services:
       - NEXTAUTH_SECRET=mysecret
       - SALT=mysalt
       - ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000 # generate via `openssl rand -hex 32`
-      - NEXTAUTH_URL=http://localhost:3000
+      # - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_URL=http://localhost:80
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
       - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
       - LANGFUSE_INIT_ORG_ID=${LANGFUSE_INIT_ORG_ID:-}
@@ -24,6 +42,9 @@ services:
       - LANGFUSE_INIT_USER_EMAIL=${LANGFUSE_INIT_USER_EMAIL:-}
       - LANGFUSE_INIT_USER_NAME=${LANGFUSE_INIT_USER_NAME:-}
       - LANGFUSE_INIT_USER_PASSWORD=${LANGFUSE_INIT_USER_PASSWORD:-}
+    labels:
+      traefik.http.routers.langfuse.rule: "Host(`localhost`)"
+      traefik.http.services.langfuse.loadbalancer.server.port: 3000
 
   db:
     image: postgres
@@ -46,6 +67,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - STREAMLIT_SERVER_BASE_URL_PATH=/playground
+    labels:
+      traefik.http.routers.playground.rule: "Host(`localhost`) && PathPrefix(`/playground`)"
+      traefik.http.services.playground.loadbalancer.server.port: 8501
     ports:
       - "8501:8501"
 
