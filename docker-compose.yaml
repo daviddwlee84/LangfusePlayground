@@ -6,11 +6,11 @@ services:
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
-      - "--log.level=DEBUG"
+      # - "--log.level=DEBUG"
       - "--entrypoints.web.address=:80"
     ports:
       # The HTTP port
-      - "80:80"
+      - "${SERVER_PORT:-8089}:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
@@ -22,15 +22,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
       - NEXTAUTH_SECRET=mysecret
       - SALT=mysalt
       - ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000 # generate via `openssl rand -hex 32`
-      # - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_URL=http://localhost:80
+      - NEXTAUTH_URL=http://${SERVER_HOST:-localhost}:${SERVER_PORT:-8089}
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
       - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
       - LANGFUSE_INIT_ORG_ID=${LANGFUSE_INIT_ORG_ID:-}
@@ -43,7 +42,7 @@ services:
       - LANGFUSE_INIT_USER_NAME=${LANGFUSE_INIT_USER_NAME:-}
       - LANGFUSE_INIT_USER_PASSWORD=${LANGFUSE_INIT_USER_PASSWORD:-}
     labels:
-      traefik.http.routers.langfuse.rule: "Host(`localhost`)"
+      traefik.http.routers.langfuse.rule: "Host(`${SERVER_HOST:-localhost}`)"
       traefik.http.services.langfuse.loadbalancer.server.port: 3000
 
   db:
@@ -70,10 +69,10 @@ services:
     environment:
       - STREAMLIT_SERVER_BASE_URL_PATH=/playground
     labels:
-      traefik.http.routers.playground.rule: "Host(`localhost`) && PathPrefix(`/playground`)"
+      traefik.http.routers.playground.rule: "Host(`${SERVER_HOST:-localhost}`) && PathPrefix(`/playground`)"
       traefik.http.services.playground.loadbalancer.server.port: 8501
-    ports:
-      - "8501:8501"
+    # ports:
+    #   - "8501:8501"
 
 volumes:
   database_data:

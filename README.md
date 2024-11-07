@@ -13,8 +13,9 @@ Playground build around Langfuse
 docker compose up --build
 ```
 
-- http://localhost/playground - For Streamlit Playground
-- http://localhost - For Langfuse
+- http://localhost:8089/playground - For Streamlit Playground
+- http://localhost:8089 - For Langfuse
+- http://localhost:8080 - For Traefik Dashboard
 
 ## Todo
 
