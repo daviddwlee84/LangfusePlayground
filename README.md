@@ -19,6 +19,7 @@ docker compose up --build
 
 ## Todo
 
+- [ ] Fix Langfuse 502 error: [502-Bad Request · langfuse · Discussion #1481](https://github.com/orgs/langfuse/discussions/1481)
 - [ ] Basic chat with Langfuse callback
 - [ ] Able to fetch and select prompt from Langfuse
 - [ ] Locate placeholders from prompt for user to input

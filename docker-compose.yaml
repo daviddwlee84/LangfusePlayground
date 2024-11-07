@@ -22,14 +22,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "3000:3000"
     environment:
+      # https://langfuse.com/docs/deployment/self-host#troubleshooting
+      # https://github.com/orgs/langfuse/discussions/1481
+      - HOSTNAME=0.0.0.0
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
       - NEXTAUTH_SECRET=mysecret
       - SALT=mysalt
       - ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000 # generate via `openssl rand -hex 32`
-      - NEXTAUTH_URL=http://${SERVER_HOST:-localhost}:${SERVER_PORT:-8089}
+      # - NEXTAUTH_URL=http://${SERVER_HOST:-localhost}:${SERVER_PORT:-8089}
+      - NEXTAUTH_URL=http://${SERVER_HOST:-localhost}:3000
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
       - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
       - LANGFUSE_INIT_ORG_ID=${LANGFUSE_INIT_ORG_ID:-}
@@ -41,6 +45,7 @@ services:
       - LANGFUSE_INIT_USER_EMAIL=${LANGFUSE_INIT_USER_EMAIL:-}
       - LANGFUSE_INIT_USER_NAME=${LANGFUSE_INIT_USER_NAME:-}
       - LANGFUSE_INIT_USER_PASSWORD=${LANGFUSE_INIT_USER_PASSWORD:-}
+    # https://langfuse.com/docs/deployment/self-host#custom-base-path
     labels:
       traefik.http.routers.langfuse.rule: "Host(`${SERVER_HOST:-localhost}`)"
       traefik.http.services.langfuse.loadbalancer.server.port: 3000
@@ -73,6 +78,8 @@ services:
       traefik.http.services.playground.loadbalancer.server.port: 8501
     # ports:
     #   - "8501:8501"
+    volumes:
+      - .:/app
 
 volumes:
   database_data:
